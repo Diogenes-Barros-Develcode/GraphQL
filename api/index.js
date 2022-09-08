@@ -1,18 +1,35 @@
 const { ApolloServer } = require('apollo-server')
-const userSchema = require('./user/schema/user.graphql');
-const userResolvers = require('./user/resolvers/resolver');
-const UsersAPI = require('./user/datasource/user');
+const path = require('path')
 
-const typeDefs = [userSchema]
+const { userSchema, userResolvers, UsersAPI} = require('./user')
 
-const resolvers = [userResolvers]
+const { turmaSchema, turmaResolvers, TurmasAPI} = require('./turma')
 
-const server = new ApolloServer({typeDefs, resolvers, dataSources: () => {
+const { matriculaSchema, matriculaResolvers, MatriculasAPI } = require('./matricula')
+
+const typeDefs = ([userSchema, turmaSchema, matriculaSchema])
+const resolvers = [userResolvers, turmaResolvers, matriculaResolvers]
+
+const dbConfig = {
+  client: 'sqlite3',
+  useNullAsDefault: true,
+  connection: {
+    filename: path.resolve(__dirname, './data/database.db')
+  }
+}
+
+const server = new ApolloServer( { 
+  typeDefs,
+  resolvers,
+  dataSources: () => {
     return {
-        usersAPI: new UsersAPI()
+      usersAPI: new UsersAPI(),
+      turmasAPI: new TurmasAPI(dbConfig),
+      MatriculasAPI: new MatriculasAPI(dbConfig)
     }
-}})
+  },
+ })
 
 server.listen().then(({url}) => {
-    console.log(`Servidor rodando na porta ${url}`)
+  console.log(`Servidor rodando na porta ${url}`)
 })
